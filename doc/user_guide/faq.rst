@@ -15,13 +15,13 @@ altair to an environment capable of executing the javascript code that
 turns the JSON specification into a visual chart.
 
 There are extensions included in JupyterLab, Jupyter Notebook, Colab,
-Kaggle kernels, Hydrogen, and nteract that know how to automatically perform
-this rendering (see :ref:`installation` for details).
+Kaggle kernels, VSCode, Hydrogen, and nteract that know how to automatically
+perform this rendering (see :ref:`installation` for details).
 
 For other frontends that don't have vega-lite rendering built-in, it is
-possible to work with Altair charts using either the ``vegascope`` project,
-or the build-in :meth:`Chart.serve` or :meth:`Chart.save` methods.
-For more information on thse, see :ref:`display-general`.
+possible to work with Altair charts using the build-in :meth:`Chart.show`
+or :meth:`Chart.save` methods.
+For more information on these, see :ref:`display-general`.
 
 .. _faq-no-display:
 
@@ -158,7 +158,7 @@ and performance may suffer.
 Passing Data by URL
 ~~~~~~~~~~~~~~~~~~~
 A better solution when working with large datasets is to not embed the data
-in the notebook, but rather store it separately pass it to the chart by URL.
+in the notebook, but rather store it separately and pass it to the chart by URL.
 This not only addresses the issue of large notebooks, but also leads to better
 interactivity performance with large datasets.
 

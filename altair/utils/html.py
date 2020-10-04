@@ -1,21 +1,15 @@
-from __future__ import unicode_literals
 import json
 import jinja2
 
 
-HTML_TEMPLATE = jinja2.Template("""
+HTML_TEMPLATE = jinja2.Template(
+    """
 {%- if fullhtml -%}
 <!DOCTYPE html>
 <html>
 <head>
 {%- endif %}
   <style>
-    .vega-actions a {
-        margin-right: 12px;
-        color: #757575;
-        font-weight: normal;
-        font-size: 13px;
-    }
     .error {
         color: red;
     }
@@ -87,11 +81,81 @@ requirejs.config({
 )
 
 
-def spec_to_html(spec, mode,
-                 vega_version, vegaembed_version, vegalite_version=None,
-                 base_url="https://cdn.jsdelivr.net/npm/",
-                 output_div='vis', embed_options=None, json_kwds=None,
-                 fullhtml=True, requirejs=False):
+HTML_TEMPLATE_UNIVERSAL = jinja2.Template(
+    """
+<div id="{{ output_div }}"></div>
+<script type="text/javascript">
+  (function(spec, embedOpt){
+    let outputDiv = document.currentScript.previousElementSibling;
+    if (outputDiv.id !== "{{ output_div }}") {
+      outputDiv = document.getElementById("{{ output_div }}");
+    }
+    const paths = {
+      "vega": "{{ base_url }}/vega@{{ vega_version }}?noext",
+      "vega-lib": "{{ base_url }}/vega-lib?noext",
+      "vega-lite": "{{ base_url }}/vega-lite@{{ vegalite_version }}?noext",
+      "vega-embed": "{{ base_url }}/vega-embed@{{ vegaembed_version }}?noext",
+    };
+
+    function loadScript(lib) {
+      return new Promise(function(resolve, reject) {
+        var s = document.createElement('script');
+        s.src = paths[lib];
+        s.async = true;
+        s.onload = () => resolve(paths[lib]);
+        s.onerror = () => reject(`Error loading script: ${paths[lib]}`);
+        document.getElementsByTagName("head")[0].appendChild(s);
+      });
+    }
+
+    function showError(err) {
+      outputDiv.innerHTML = `<div class="error" style="color:red;">${err}</div>`;
+      throw err;
+    }
+
+    function displayChart(vegaEmbed) {
+      vegaEmbed(outputDiv, spec, embedOpt)
+        .catch(err => showError(`Javascript Error: ${err.message}<br>This usually means there's a typo in your chart specification. See the javascript console for the full traceback.`));
+    }
+
+    if(typeof define === "function" && define.amd) {
+      requirejs.config({paths});
+      require(["vega-embed"], displayChart, err => showError(`Error loading script: ${err.message}`));
+    } else if (typeof vegaEmbed === "function") {
+      displayChart(vegaEmbed);
+    } else {
+      loadScript("vega")
+        .then(() => loadScript("vega-lite"))
+        .then(() => loadScript("vega-embed"))
+        .catch(showError)
+        .then(() => displayChart(vegaEmbed));
+    }
+  })({{ spec }}, {{ embed_options }});
+</script>
+"""
+)
+
+
+TEMPLATES = {
+    "standard": HTML_TEMPLATE,
+    "universal": HTML_TEMPLATE_UNIVERSAL,
+}
+
+
+def spec_to_html(
+    spec,
+    mode,
+    vega_version,
+    vegaembed_version,
+    vegalite_version=None,
+    base_url="https://cdn.jsdelivr.net/npm/",
+    output_div="vis",
+    embed_options=None,
+    json_kwds=None,
+    fullhtml=True,
+    requirejs=False,
+    template="standard",
+):
     """Embed a Vega/Vega-Lite spec into an HTML page
 
     Parameters
@@ -122,6 +186,10 @@ def spec_to_html(spec, mode,
     requirejs : boolean (optional)
         If False (default) then load libraries from base_url using <script>
         tags. If True, then load libraries using requirejs
+    template : jinja2.Template or string (optional)
+        Specify the template to use (default = 'standard'). If template is a
+        string, it must be one of {'universal', 'standard'}. Otherwise, it
+        can be a jinja2.Template object containing a custom template.
 
     Returns
     -------
@@ -131,9 +199,9 @@ def spec_to_html(spec, mode,
     embed_options = embed_options or {}
     json_kwds = json_kwds or {}
 
-    mode = embed_options.setdefault('mode', mode)
+    mode = embed_options.setdefault("mode", mode)
 
-    if mode not in ['vega', 'vega-lite']:
+    if mode not in ["vega", "vega-lite"]:
         raise ValueError("mode must be either 'vega' or 'vega-lite'")
 
     if vega_version is None:
@@ -142,14 +210,22 @@ def spec_to_html(spec, mode,
     if vegaembed_version is None:
         raise ValueError("must specify vegaembed_version")
 
-    if mode == 'vega-lite' and vegalite_version is None:
+    if mode == "vega-lite" and vegalite_version is None:
         raise ValueError("must specify vega-lite version for mode='vega-lite'")
 
-    return HTML_TEMPLATE.render(spec=json.dumps(spec, **json_kwds),
-                                embed_options=json.dumps(embed_options),
-                                mode=mode,
-                                vega_version=vega_version,
-                                vegalite_version=vegalite_version,
-                                vegaembed_version=vegaembed_version,
-                                base_url=base_url, output_div=output_div,
-                                fullhtml=fullhtml, requirejs=requirejs)
+    template = TEMPLATES.get(template, template)
+    if not hasattr(template, "render"):
+        raise ValueError("Invalid template: {0}".format(template))
+
+    return template.render(
+        spec=json.dumps(spec, **json_kwds),
+        embed_options=json.dumps(embed_options),
+        mode=mode,
+        vega_version=vega_version,
+        vegalite_version=vegalite_version,
+        vegaembed_version=vegaembed_version,
+        base_url=base_url,
+        output_div=output_div,
+        fullhtml=fullhtml,
+        requirejs=requirejs,
+    )

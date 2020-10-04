@@ -47,16 +47,16 @@ Channel     Altair Class         Description                        Example
 ==========  ===================  =================================  ===================================
 x           :class:`X`           The x-axis value                   :ref:`gallery_scatter_tooltips`
 y           :class:`Y`           The y-axis value                   :ref:`gallery_scatter_tooltips`
-x2          :class:`X2`          Second x value for ranges          :ref:`gallery_errorbars_with_ci`
-y2          :class:`Y2`          Second y value for ranges          :ref:`gallery_line_with_ci`
+x2          :class:`X2`          Second x value for ranges          :ref:`gallery_gantt_chart`
+y2          :class:`Y2`          Second y value for ranges          :ref:`gallery_candlestick_chart`
 longitude   :class:`Longitude`   Longitude for geo charts           :ref:`gallery_airports`
 latitude    :class:`Latitude`    Latitude for geo charts            :ref:`gallery_airports`
-longitude2  :class:`Longitude2`  Second longitude value for ranges  N/A
-latitude2   :class:`Latitude2`   Second latitude value for ranges   N/A
-xerror      :class:`XError`      The x-axis error value             N/A
-yerror      :class:`YError`      The y-axis error value             N/A
-xerror2     :class:`XError2`     The second x-axis error value      N/A
-yerror2     :class:`YError2`     The second y-axis error value      N/A
+longitude2  :class:`Longitude2`  Second longitude value for ranges  :ref:`gallery_airport_connections`
+latitude2   :class:`Latitude2`   Second latitude value for ranges   :ref:`gallery_airport_connections`
+xError      :class:`XError`      The x-axis error value             N/A
+yError      :class:`YError`      The y-axis error value             N/A
+xError2     :class:`XError2`     The second x-axis error value      N/A
+yError2     :class:`YError2`     The second y-axis error value      N/A
 ==========  ===================  =================================  ===================================
 
 Mark Property Channels:
@@ -65,14 +65,15 @@ Mark Property Channels:
 Channel        Altair Class            Description                     Example
 =============  ======================  ==============================  =========================================
 color          :class:`Color`          The color of the mark           :ref:`gallery_simple_heatmap`
-fill           :class:`Fill`           The fill for the mark           N/A
+fill           :class:`Fill`           The fill for the mark           :ref:`gallery_ridgeline_plot`
 fillopacity    :class:`FillOpacity`    The opacity of the mark's fill  N/A
 opacity        :class:`Opacity`        The opacity of the mark         :ref:`gallery_horizon_graph`
-shape          :class:`Shape`          The shape of the mark           N/A
+shape          :class:`Shape`          The shape of the mark           :ref:`gallery_us_incomebrackets_by_state_facet`
 size           :class:`Size`           The size of the mark            :ref:`gallery_table_bubble_plot_github`
 stroke         :class:`Stroke`         The stroke of the mark          N/A
-strokeopacity  :class:`StrokeOpacity`  The opacity of the line         N/A
-strokewidth    :class:`StrokeWidth`    The width of the line           N/A
+strokeDash     :class:`StrokeDash`     The stroke dash style           :ref:`gallery_multi_series_line`
+strokeOpacity  :class:`StrokeOpacity`  The opacity of the line         N/A
+strokeWidth    :class:`StrokeWidth`    The width of the line           N/A
 =============  ======================  ==============================  =========================================
 
 Text and Tooltip Channels:
@@ -90,7 +91,7 @@ Hyperlink Channel:
 =======  ================  ========================  =========================================
 Channel  Altair Class      Description               Example
 =======  ================  ========================  =========================================
-href     :class:`Href`     Hyperlink for  points     N/A
+href     :class:`Href`     Hyperlink for  points     :ref:`gallery_scatter_href`
 =======  ================  ========================  =========================================
 
 Level of Detail Channel:
@@ -111,19 +112,20 @@ order    :class:`Order`    Sets the order of the marks    :ref:`gallery_connecte
 
 Facet Channels:
 
-=======  ================  ============================  ============================================
-Channel  Altair Class      Description                   Example
-=======  ================  ============================  ============================================
-column   :class:`Column`   The column of a faceted plot  :ref:`gallery_trellis_scatter_plot`
-row      :class:`Row`      The row of a faceted plot     :ref:`gallery_beckers_barley_trellis_plot`
-=======  ================  ============================  ============================================
+=======  ================  ===============================================  =============================================
+Channel  Altair Class      Description                                      Example
+=======  ================  ===============================================  =============================================
+column   :class:`Column`   The column of a faceted plot                     :ref:`gallery_trellis_scatter_plot`
+row      :class:`Row`      The row of a faceted plot                        :ref:`gallery_beckers_barley_trellis_plot`
+facet    :class:`Facet`    The row and/or column of a general faceted plot  :ref:`gallery_us_population_over_time_facet`
+=======  ================  ===============================================  =============================================
 
 .. _encoding-data-types:
 
 Encoding Data Types
 ~~~~~~~~~~~~~~~~~~~
 The details of any mapping depend on the *type* of the data. Altair recognizes
-four main data types:
+five main data types:
 
 ============  ==============  ================================================
 Data Type     Shorthand Code  Description
@@ -222,21 +224,6 @@ that contains integers specifying a year:
     alt.hconcat(
         base.encode(x='year:Q').properties(title='year=quantitative'),
         base.encode(x='year:O').properties(title='year=ordinal')
-    )
-
-In altair, quantitative scales always start at zero unless otherwise
-specified, while ordinal scales are limited to the values within the data.
-
-Overriding the behavior of including zero in the axis, we see that even then
-the precise appearance of the marks representing the data are affected by
-the data type:
-
-.. altair-plot::
-
-    base.encode(
-        alt.X('year:Q',
-            scale=alt.Scale(zero=False)
-        )
     )
 
 Because quantitative values do not have an inherent width, the bars do not
@@ -488,8 +475,8 @@ For line marks, the `order` channel encodes the order in which data points are c
         order='year'
     )
 
-Sorting Legends and Axes
-~~~~~~~~~~~~~~~~~~~~~~~~
+Sorting
+~~~~~~~
 
 Specific channels can take a  :class:`sort` property which determines the
 order of the scale being used for the channel. There are a number of different
@@ -498,12 +485,15 @@ sort options available:
 - ``sort='ascending'`` (Default) will sort the field's value in ascending order.
   for string data, this uses standard alphabetical order.
 - ``sort='descending'`` will sort the field's value in descending order
+- passing the name of an encoding channel to ``sort``, such as ``"x"`` or ``"y"``, allows for 
+  sorting by that channel. An optional minus prefix can be used for a descending 
+  sort. For example ``sort='-x'`` would sort by the x channel in descending order.
 - passing a list to ``sort`` allows you to explicitly set the order in which
   you would like the encoding to appear
 - passing a :class:`EncodingSortField` class to ``sort`` allows you to sort
   an axis by the value of some other field in the dataset.
 
-Here is an example of applying these four different sort approaches on the
+Here is an example of applying these five different sort approaches on the
 x-axis, using the barley dataset:
 
 .. altair-plot::
@@ -541,6 +531,14 @@ x-axis, using the barley dataset:
         title='Explicit'
     )
 
+    # Sort according to encoding channel
+    sortchannel = base.encode(
+        alt.X(field='site', type='nominal',
+              sort='y')
+    ).properties(
+        title='By Channel'
+    )
+
     # Sort according to another field
     sortfield = base.encode(
         alt.X(field='site', type='nominal',
@@ -549,7 +547,46 @@ x-axis, using the barley dataset:
         title='By Yield'
     )
 
-    ascending | descending | explicit | sortfield
+    alt.concat(
+        ascending, descending, explicit,
+        sortchannel, sortfield,
+        columns=3
+    )
+
+The last two charts are the same because the default aggregation 
+(see :ref:`encoding-aggregates`) is ``mean``. To highlight the 
+difference between sorting via channel and sorting via field consider the 
+following example where we don't aggregate the data:
+
+.. altair-plot::
+
+    import altair as alt
+    from vega_datasets import data
+
+    barley = data.barley()
+    base = alt.Chart(barley).mark_point().encode(
+        y='yield:Q',
+    ).properties(width=200)
+    
+    # Sort according to encoding channel
+    sortchannel = base.encode(
+        alt.X(field='site', type='nominal',
+              sort='y')
+    ).properties(
+        title='By Channel'
+    )
+
+    # Sort according to another field
+    sortfield = base.encode(
+        alt.X(field='site', type='nominal',
+              sort=alt.EncodingSortField(field='yield', op='min'))
+    ).properties(
+        title='By Min Yield'
+    )
+    sortchannel | sortfield
+
+By passing a :class:`EncodingSortField` class to ``sort`` we have more control over 
+the sorting process.
 
 
 Sorting Legends

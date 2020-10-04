@@ -82,8 +82,8 @@ heat-map:
     source = data.movies.url
 
     heatmap = alt.Chart(source).mark_rect().encode(
-        alt.X('IMDB_Rating:Q', bin=True),
-        alt.Y('Rotten_Tomatoes_Rating:Q', bin=True),
+        alt.X('IMDB Rating:Q', bin=True),
+        alt.Y('Rotten Tomatoes Rating:Q', bin=True),
         alt.Color('count()', scale=alt.Scale(scheme='greenblue'))
     )
 
@@ -91,8 +91,8 @@ heat-map:
         color='black',
         size=5,
     ).encode(
-        x='IMDB_Rating:Q',
-        y='Rotten_Tomatoes_Rating:Q',
+        x='IMDB Rating:Q',
+        y='Rotten Tomatoes Rating:Q',
     )
 
     heatmap + points
@@ -176,19 +176,24 @@ with a ``brush`` selection to add interaction:
 
     import altair as alt
     from vega_datasets import data
-    sp500 = data.sp500.url
+
+    source = data.sp500.url
 
     brush = alt.selection(type='interval', encodings=['x'])
 
-    upper = alt.Chart(sp500).mark_area().encode(
-        x=alt.X('date:T', scale=alt.Scale(domain=brush)),
-        y='price:Q'
+    base = alt.Chart(source).mark_area().encode(
+        x = 'date:T',
+        y = 'price:Q'
     ).properties(
         width=600,
         height=200
     )
 
-    lower = upper.properties(
+    upper = base.encode(
+        alt.X('date:T', scale=alt.Scale(domain=brush))
+    )
+
+    lower = base.properties(
         height=60
     ).add_selection(brush)
 
@@ -211,7 +216,7 @@ the concatenated panels is modification of *one or more encodings*.
 
 For example, suppose you would like to create a multi-panel scatter-plot to show
 different projections of a multi-dimensional dataset.
-Let's first create sucha chart manually using ``hconcat`` and ``vconcat``, before
+Let's first create such a chart manually using ``hconcat`` and ``vconcat``, before
 showing how ``repeat`` can be used to build the chart more efficiently:
 
 .. altair-plot::
